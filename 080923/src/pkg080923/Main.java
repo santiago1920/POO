@@ -6,7 +6,7 @@ public class Main {
         int limitObjet = 3;
         Persona[] arrayPerson = new Persona[limitObjet];
         
-        //instancia
+        //instancia //Generar ciclo para guardar estos datos en los limites que el programa define ingresado por teclado
         arrayPerson[0] = new Persona("Jordan","1061","Colombia");
         arrayPerson[1] = new Persona("Camilo","1098","Panama");
         arrayPerson[2] = new Persona("Ana","9898","Chile");
