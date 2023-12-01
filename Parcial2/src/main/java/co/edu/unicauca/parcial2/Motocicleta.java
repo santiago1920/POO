@@ -3,7 +3,7 @@ public class Motocicleta extends Vehiculo {
     private int cilindrada;
     
     public Motocicleta(String marca, String modelo, String placa,String horaIngreso, String horaSalida, int cilindrada) {
-        super(marca, modelo, placa, horaIngreso, horaSalida);
+        super(marca, modelo, placa, horaIngreso, horaSalida, 2000);
         this.cilindrada = cilindrada;
     }
 
@@ -14,6 +14,8 @@ public class Motocicleta extends Vehiculo {
     public void setCilindrada(int cilindrada) {
         this.cilindrada = cilindrada;
     }
+    
+    
 
      // Otros métodos específicos para motocicletas
 }

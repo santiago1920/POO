@@ -4,47 +4,56 @@ import com.google.gson.Gson;
 import java.util.LinkedList;
 
 public class main {
-
-    /**
-     * @param args the command line arguments
-     */
     public static void main(String[] args) {
-         /*
-        * Esto nos sirve para generar un formato json para retornar la data del array
-        * sin tener que acomodarla bonita de manera manual
-        */
         Gson gson = new Gson();
         
         LinkedList <Vehiculo> automoviles = new LinkedList<>();
         LinkedList <Vehiculo> motos = new LinkedList<>();
         LinkedList <Vehiculo> automovilesActuales = new LinkedList<>();
         LinkedList <Vehiculo> motosActuales = new LinkedList<>();
+        LinkedList <Vehiculo> automovilesReporte = new LinkedList<>();
+        LinkedList <Vehiculo> motosReporte = new LinkedList<>();
         
-        // Automovil creado por defecto
         Automovil auto = new Automovil(4, "Mazda", "3", "ZYX987","11:00",null);
         automoviles.add(auto);
         
-        Motocicleta moto = new Motocicleta("Honda", "CBR600", "XYZ789","11:57","11:45",600);
+        Motocicleta moto = new Motocicleta("Honda", "CBR600", "XYZ789","11:57",null,600);
         motos.add(moto);
         
-        // Definir endpoints
+        for (Vehiculo auto1 : automoviles) {
+            if (auto1.getHoraSalida() == null || auto.getHoraSalida().isEmpty() && !automovilesActuales.contains(auto)) {
+                automovilesActuales.add(auto1);
+            }
+        }
         
-        // Por defecto 
+        for (Vehiculo moto1 : motos) {
+            if (moto1.getHoraSalida() == null || moto.getHoraSalida().isEmpty() && !motosActuales.contains(moto)) {
+                motosActuales.add(moto1);
+            }
+        }
         
-        // Listado de automovile
-        get("/automovilesReporte", (req, res) -> {
+        for (Vehiculo auto1 : automoviles) {
+            if (auto1.getHoraSalida() != null) {
+                automovilesReporte.add(auto1);
+            }
+        }
+        
+        for (Vehiculo moto1 : motos) {
+            if (moto1.getHoraSalida() != null) {
+                motosReporte.add(moto1);
+            }
+        }
+        
+        get("/automoviles", (req, res) -> {
             res.type("application/json");
             return gson.toJson(automoviles);
         });
         
-        get("/motosReporte", (req, res) -> {
+        get("/motos", (req, res) -> {
             res.type("application/json");
             return gson.toJson(motos);
         });
         
-        
-        // Guardar automovil
-        // endpoint GET para agregar un automóvil
         get("/agregarAutomovil/:marca/:modelo/:placa/:numeroPuertas/:horaIngreso", (req, res) -> {
             
             // Añadimos esto para retornar en formato Json
@@ -59,9 +68,22 @@ public class main {
             // No olvidar convertir en integer los string numericos que llegan por url
             int numeroPuertas = Integer.parseInt(req.params(":numeroPuertas"));
             
+            for (Vehiculo auto1 : automoviles) {
+                if (auto1.getPlaca().equals(placa)) {
+                    return gson.toJson("Ya hay un vehiculo con placa "+placa+" registrado");
+               }
+            }
+            
+            for (Vehiculo moto1 : motos) {
+                if (moto1.getPlaca().equals(placa)) {
+                    return gson.toJson("Ya hay un vehiculo con placa "+placa+" registrado");
+               }
+            }
+            
             Automovil nuevoAuto = new Automovil(numeroPuertas, marca, modelo, placa, horaIngreso, horaSalida);
-                automoviles.add(nuevoAuto);
-                return gson.toJson(nuevoAuto);
+            automoviles.add(nuevoAuto);
+            automovilesActuales.add(nuevoAuto);
+            return gson.toJson(nuevoAuto);
             
         });
         
@@ -77,24 +99,26 @@ public class main {
             
             int cilindrada = Integer.parseInt(req.params(":cilindrada"));
             
+            for (Vehiculo moto1 : motos) {
+                if (moto1.getPlaca().equals(placa)) {
+                    return gson.toJson("Ya hay un vehiculo con placa "+placa+" registrado");
+               }
+            }
+            
+            for (Vehiculo auto1 : automoviles) {
+                if (auto1.getPlaca().equals(placa)) {
+                    return gson.toJson("Ya hay un vehiculo con placa "+placa+" registrado");
+               }
+            }
             
             Motocicleta nuevaMoto = new Motocicleta(marca, modelo, placa, horaIngreso, horaSalida,cilindrada);
-                motos.add(nuevaMoto);
-                return gson.toJson(nuevaMoto);
-            
-            
+            motos.add(nuevaMoto);
+            motosActuales.add(nuevaMoto);
+            return gson.toJson(nuevaMoto);    
         });
         
         get("/AutomovilesActuales", (req, res) -> {
-        // Añadimos esto para retornar en formato Json
         res.type("application/json");
-
-    // Iterar a través de la lista de automóviles y encontrar aquellos sin hora de salida registrada
-        for (Vehiculo auto1 : automoviles) {
-            if (auto1.getHoraSalida() == null || auto.getHoraSalida().isEmpty() && !automovilesActuales.contains(auto)) {
-                automovilesActuales.add(auto1);
-            }
-        }
         if (automovilesActuales.isEmpty()) {
         return gson.toJson("No hay automóviles actuales sin hora de salida registrada.");
         } else {
@@ -103,16 +127,8 @@ public class main {
         });
         
         get("/motosActuales", (req, res) -> {
-        // Añadimos esto para retornar en formato Json
         res.type("application/json");
-
-    // Iterar a través de la lista de automóviles y encontrar aquellos sin hora de salida registrada
-        for (Vehiculo moto1 : motos) {
-            if (moto1.getHoraSalida() == null || auto.getHoraSalida().isEmpty()) {
-                motosActuales .add(moto1);
-            }
-        }
-        if (motosActuales .isEmpty()) {
+        if (motosActuales.isEmpty()) {
         return gson.toJson("No hay motos actuales sin hora de salida registrada.");
         } else {
             return gson.toJson(motosActuales );
@@ -124,7 +140,8 @@ public class main {
             // Obtener parámetros de la URL
             String placa = req.params(":placa");
             String horaSalida = req.params(":horaSalida");
-
+            
+            
             // Buscar el automóvil en la lista principal
             for (Vehiculo auto1 : automoviles) {
                 if (auto1.getPlaca().equals(placa)) {
@@ -135,6 +152,13 @@ public class main {
                     
                     // Actualizar la hora de salida
                     auto1.setHoraSalida(horaSalida);
+                    
+                    if(auto1.verificarHoras()==true){
+                        auto1.setHoraSalida(null);
+                        return gson.toJson("Error: la hora de salida es menor o igual que la hora de ingreso");
+                    }
+                    
+                    automovilesReporte.add(auto1);
 
                     // Eliminar el automóvil de la lista automovilesActuales si tenía hora de salida nula
                     if (auto1.getHoraSalida() != null && !auto1.getHoraSalida().isEmpty()) {
@@ -154,6 +178,13 @@ public class main {
                     
                     // Actualizar la hora de salida
                     moto1.setHoraSalida(horaSalida);
+                    
+                    if(moto1.verificarHoras()==true){
+                        moto1.setHoraSalida(null);
+                        return gson.toJson("Error: la hora de salida es menor o igual que la hora de ingreso. Escribala de nuevo");
+                    }
+                    
+                    motosReporte.add(moto1);
 
                     // Eliminar el automóvil de la lista automovilesActuales si tenía hora de salida nula
                     if (moto1.getHoraSalida() != null && !moto1.getHoraSalida().isEmpty()) {
@@ -162,11 +193,78 @@ public class main {
                     return gson.toJson("Hora de salida actualizada para la moto con placa: " + placa);
                }
             }
-            
-            
-            
             return gson.toJson("No se encontró ningún vehiculo con la placa proporcionada.");
         });
+        
+        get("/automovilesReporte", (req, res) -> {
+            res.type("application/json");
+            if (automovilesReporte.isEmpty()) {
+                return gson.toJson("Ningun automovil a salido del parqueadero");
+            } else {
+                LinkedList<String> preciosAutomoviles = new LinkedList<>();
+                for (Vehiculo auto1 : automovilesReporte) {
+                    preciosAutomoviles.add("Precio total del auto con placa " + auto1.getPlaca() + ": $" + auto1.precioHora());
+                }
+                return gson.toJson(preciosAutomoviles);
+            }
+        });
+        
+        get("/motosReporte", (req, res) -> {
+            res.type("application/json");
+            if (motosReporte.isEmpty()) {
+                return gson.toJson("Ninguna moto a salido del parqueadero");
+            } else {
+                LinkedList<String> preciosMotos = new LinkedList<>();
+                for (Vehiculo moto1 : motosReporte) {
+                    preciosMotos.add("Precio total de la moto con placa " + moto1.getPlaca() + ": $" + moto1.precioHora());
+                }
+                return gson.toJson(preciosMotos);
+            }
+        });
+        
+        get("/gananciaMotosAutos", (req, res)->{
+            res.type("application/json");
+            
+            if (automovilesReporte.isEmpty() && motosReporte.isEmpty()) {
+                return gson.toJson("Ningún vehículo ha salido del parqueadero");
+            }else{
+                double totalAutos = automovilesReporte.stream().mapToDouble(Vehiculo::precioHora).sum();
+                double totalMotos = motosReporte.stream().mapToDouble(Vehiculo::precioHora).sum();
+
+                StringBuilder message = new StringBuilder();
+                if (totalAutos > 0) {
+                    message.append("Ganancias total por autos: $").append(totalAutos);
+                } else {
+                    message.append("No ha habido ganancias por autos");
+                }
+
+                if (totalMotos > 0) {
+                     if (totalAutos > 0) {
+                        message.append(", ");
+                    }
+                    message.append("Ganancias total por motos: $").append(totalMotos);
+                } else {
+                    if (totalAutos > 0) {
+                        message.append(", No ha habido ganancias por motos");
+                    }
+                }
+
+                return gson.toJson(message.toString());
+            }
+        });
+        
+        get("/gananciaTotales", (req, res)->{
+           res.type("application/json");
+
+            double totalGananciasAutos = automovilesReporte.stream().mapToDouble(Vehiculo::precioHora).sum();
+            double totalGananciasMotos = motosReporte.stream().mapToDouble(Vehiculo::precioHora).sum();
+            double gananciaTotal = totalGananciasAutos + totalGananciasMotos;
+
+            if (gananciaTotal > 0) {
+                return gson.toJson("Ganancia total: $" + gananciaTotal);
+            } else {
+                return gson.toJson("Ningún vehículo ha salido del parqueadero, por ende, no hay ganancias totales");
+            } 
+        });
     }
-    
 }
